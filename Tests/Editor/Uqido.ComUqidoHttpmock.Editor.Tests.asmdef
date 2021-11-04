@@ -1,0 +1,14 @@
+{
+    "name": "Uqido.ComUqidoHttpmock.Editor.Tests",
+    "references": [
+        "Uqido.ComUqidoHttpmock.Editor",
+        "Uqido.ComUqidoHttpmock"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}
