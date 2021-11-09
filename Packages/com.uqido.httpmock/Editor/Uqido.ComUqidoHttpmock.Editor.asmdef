@@ -1,0 +1,10 @@
+{
+    "name": "Uqido.ComUqidoHttpmock.Editor",
+    "references": [
+      "Uqido.ComUqidoHttpmock"
+    ],
+    "includePlatforms": [
+        "Editor"
+    ],
+    "excludePlatforms": []
+}

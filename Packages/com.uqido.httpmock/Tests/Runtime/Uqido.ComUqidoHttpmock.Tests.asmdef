@@ -1,0 +1,11 @@
+{
+    "name": "Uqido.ComUqidoHttpmock.Tests",
+    "references": [
+        "Uqido.ComUqidoHttpmock"
+    ],
+    "optionalUnityReferences": [
+        "TestAssemblies"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": []
+}
