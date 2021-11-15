@@ -1,0 +1,196 @@
+# This is a basic workflow to help you get started with Actions
+
+name: CI
+
+# Controls when the workflow will run
+on:
+  # Triggers the workflow on push or pull request events but only for the main branch
+  #push:
+  #  branches: [ main ]
+  pull_request:
+    branches: [ develop ]
+
+  # Allows you to run this workflow manually from the Actions tab
+  workflow_dispatch:
+
+# A workflow run is made up of one or more jobs that can run sequentially or in parallel
+jobs:
+  # This workflow contains a single job called "build"
+  check-unity:
+    name: Check needed unity version
+    # The type of runner that the job will run on
+    runs-on: [self-hosted, linux]
+
+    outputs:
+      unity_version: ${{ steps.checker.outputs.unity-version }}
+      unity_changeset: ${{ steps.checker.outputs.unity-changeset }}
+      is_image_available: ${{ steps.checker.outputs.is-image-available }}
+    # Steps represent a sequence of tasks that will be executed as part of the job
+    steps:
+      # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Check Unity version
+        id: checker
+        uses: ./.github/actions/unity-version-checker
+
+      - name: Print Result
+        run: |
+          echo "Unity version : ${{ steps.checker.outputs.unity-version }}"
+          echo "Unity changeset : ${{ steps.checker.outputs.unity-changeset }}"
+          echo "Already Available : ${{ steps.checker.outputs.is-image-available }}"
+      
+
+  generate-unity-image:
+    name: Create new Unity Docker image if needed
+    # The type of runner that the job will run on
+    runs-on: ubuntu-latest
+    needs: [check-unity]
+    if: ${{ needs.check-unity.outputs.is_image_available == 'false' }}
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+
+      - name: Login to DockerHub
+        uses: docker/login-action@v1 
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      - name: Build and push Docker images
+        # You may pin to the exact commit or the version.
+        # uses: docker/build-push-action@1bc1040caef9e604eb543693ba89b5bf4fc80935
+        uses: docker/build-push-action@v2.6.1
+        with:
+          # List of build-time variables
+          build-args: |
+            version=${{ needs.check-unity.outputs.unity_version }}
+            changeSet=${{ needs.check-unity.outputs.unity_changeset }}
+            module=base
+          # Build's context is the set of files located in the specified PATH or URL
+          context: ./DockerImage
+          # Push is a shorthand for --output=type=registry
+          push: true
+          # List of tags
+          tags: |
+            battlefieldnoob/unity-github-ci:${{ needs.check-unity.outputs.unity_version }}-base
+  
+  unity-tests:
+    name: Run Unity tests
+    runs-on: [self-hosted, linux]
+    needs: [check-unity, generate-unity-image]
+    if: always()
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - uses: actions/cache@v2
+        with:
+          path: Library
+          key: Library-${{ github.repository }}
+            
+      # Runs a single command using the runners shell
+      - name: Unity - Test runner
+        id: tests
+        # You may pin to the exact commit or the version.
+        # uses: game-ci/unity-test-runner@1fcc491cbe03538810759b75052d726939d2cc6c
+        uses: game-ci/unity-test-runner@v2.0-alpha-5
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        with:
+          # Specific docker image that should be used for building the project
+          customImage: battlefieldnoob/unity-github-ci:${{ needs.check-unity.outputs.unity_version }}-base
+          # The type of tests to be run by the test runner.
+          # testMode: # optional, default is all
+          # Path where test artifacts should be stored.
+          # artifactsPath: # optional, default is artifacts
+          # Extra parameters to configure the Unity editor run.
+          customParameters: "-debugCodeOptimization -enableCodeCoverage -coverageOptions useProjectSettings"
+          # Token to authorize access to the GitHub REST API. If provided, a check run will be created with the test results.
+          githubToken: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Fetch Repo Name
+        id: repo-name
+        run: echo "::set-output name=value::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')"
+
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Test results for ${{ steps.repo-name.outputs.value }}
+          path: ${{ steps.tests.outputs.artifactsPath }}
+      
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Coverage results for ${{ steps.repo-name.outputs.value }}
+          path: ./CodeCoverage
+  
+  coverage:
+    name: Code Coverage report
+    # The type of runner that the job will run on
+    runs-on: [self-hosted, linux]
+    needs: [unity-tests]
+    if: always()
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          lfs: true
+
+      - name: Fetch Repo Name
+        id: repo-name
+        run: echo "::set-output name=value::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')"
+
+      - uses: actions/download-artifact@v2
+        with:
+          name: Coverage results for ${{ steps.repo-name.outputs.value }}
+          path: ./coverage
+          
+      - name: Replace path into coverage file
+        run: |
+          # find all file with .xml extension into coverage/workspace-opencov (recursive) and replace github/workspace with actual workspace path
+          find ./coverage/workspace-opencov -type f -name '*.xml' -exec sed -i 's+/github/workspace+${{ github.workspace }}+' {} \;
+          
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Coverage results with replacements for ${{ steps.repo-name.outputs.value }}
+          path: ./coverage
+
+      - name: ReportGenerator
+        uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
+        with:
+          reports: 'coverage/workspace-opencov/**/*.xml' # REQUIRED # The coverage reports that should be parsed (separated by semicolon). Globbing is supported.
+          targetdir: 'coveragereport' # REQUIRED # The directory where the generated report should be saved.
+          reporttypes: 'Cobertura' # The output formats and scope (separated by semicolon) Values: Badges, Clover, Cobertura, CsvSummary, Html, HtmlChart, HtmlInline, HtmlInline_AzurePipelines, HtmlInline_AzurePipelines_Dark, HtmlSummary, JsonSummary, Latex, LatexSummary, lcov, MarkdownSummary, MHtml, PngChart, SonarQube, TeamCitySummary, TextSummary, Xml, XmlSummary
+          #sourcedirs: '' # Optional directories which contain the corresponding source code (separated by semicolon). The source directories are used if coverage report contains classes without path information.
+          verbosity: 'Verbose' # The verbosity level of the log messages. Values: Verbose, Info, Warning, Error, Off
+          title: '${{ steps.repo-name.outputs.value }} Coverage' # Optional title.
+          tag: '${{ github.run_number }}_${{ github.run_id }}' # Optional tag or build version.
+          #customSettings: '' # Optional custom settings (separated by semicolon). See: https://github.com/danielpalme/ReportGenerator/wiki/Settings.
+          toolpath: 'reportgeneratortool' # Default directory for installing the dotnet tool.
+
+      - uses: actions/upload-artifact@v2
+        if: always()
+        with:
+          name: Coverage Copertura results for ${{ steps.repo-name.outputs.value }}
+          path: ./coveragereport
+
+      - uses: 5monkeys/cobertura-action@master
+        with:
+          path: coveragereport/Cobertura.xml
+          repo_token: ${{ secrets.GITHUB_TOKEN }}
+          skip_covered: true
+          fail_below_threshold: true
+          minimum_coverage: 75
+          show_line: true
+          show_branch: true
+          show_class_names: true
+          show_missing: true
+          report_name: ${{ steps.repo-name.outputs.value }} Coverage
