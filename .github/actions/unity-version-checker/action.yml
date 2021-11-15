@@ -1,0 +1,12 @@
+name: 'Unity Version Checker'
+description: 'Unity Version Checker'
+outputs:
+  unity-version: # id of output
+    description: 'Unity version'
+  unity-changeset: # id of output
+    description: 'Unity changeset'
+  is-image-available: # id of output
+    description: 'is unity version available'
+runs:
+  using: 'node12'
+  main: 'dist/index.js'
