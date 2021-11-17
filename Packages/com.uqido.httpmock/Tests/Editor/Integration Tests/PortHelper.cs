@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using System.Net;
 using System.Net.NetworkInformation;
@@ -28,13 +29,21 @@ namespace HttpMock.Integration.Tests
 		private static bool IsPortInUse (int randomPort)
 		{
 
-			if (Environment.OSVersion.Platform == PlatformID.Unix) {
+			if (Environment.OSVersion.Platform == PlatformID.Unix)
+			{
+
+				var lsofPath = new[] { "/usr/bin/lsof", "/usr/sbin/lsof" }.FirstOrDefault(File.Exists);
+
+				if(string.IsNullOrEmpty(lsofPath))
+					return false; //i can't check if port is already used, i assume it is
+
 				var process = new Process () {
-					StartInfo = new ProcessStartInfo ("/usr/sbin/lsof", "-Pni") {
+					StartInfo = new ProcessStartInfo (lsofPath, "-Pni") {
 						RedirectStandardOutput = true,
 						UseShellExecute = false
 					}
 				};
+
 
 				using (process) {
 
