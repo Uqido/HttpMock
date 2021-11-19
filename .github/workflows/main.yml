@@ -120,13 +120,13 @@ jobs:
         id: repo-name
         run: echo "::set-output name=value::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')"
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.3
         if: always()
         with:
           name: Test results for ${{ steps.repo-name.outputs.value }}
           path: ${{ steps.tests.outputs.artifactsPath }}
       
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.3
         if: always()
         with:
           name: Coverage results for ${{ steps.repo-name.outputs.value }}
@@ -147,7 +147,7 @@ jobs:
         id: repo-name
         run: echo "::set-output name=value::$(echo '${{ github.repository }}' | awk -F '/' '{print $2}')"
 
-      - uses: actions/download-artifact@v2
+      - uses: actions/download-artifact@v2.0.10
         with:
           name: Coverage results for ${{ steps.repo-name.outputs.value }}
           path: ./coverage
@@ -157,14 +157,27 @@ jobs:
           # find all file with .xml extension into coverage/workspace-opencov (recursive) and replace github/workspace with actual workspace path
           find ./coverage/workspace-opencov -type f -name '*.xml' -exec sed -i 's+/github/workspace+${{ github.workspace }}+' {} \;
           
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.3
         if: always()
         with:
           name: Coverage results with replacements for ${{ steps.repo-name.outputs.value }}
           path: ./coverage
 
+      - name: Setup TMPDIR Env
+        run: |
+          echo "TMPDIR=$RUNNER_TEMP" >> $GITHUB_ENV
+
+      - name: Setup .NET Core
+        uses: actions/setup-dotnet@v1 
+        with:
+          dotnet-version: '6.0.100'
+
+      - name: Setup .net Sdk Env
+        run: |
+          echo "MSBuildSDKsPath=$HOME/.dotnet/sdk/$(dotnet --version)/Sdks" >> $GITHUB_ENV
+
       - name: ReportGenerator
-        uses: danielpalme/ReportGenerator-GitHub-Action@4.8.12
+        uses: danielpalme/ReportGenerator-GitHub-Action@5.0.0
         with:
           reports: 'coverage/workspace-opencov/**/*.xml' # REQUIRED # The coverage reports that should be parsed (separated by semicolon). Globbing is supported.
           targetdir: 'coveragereport' # REQUIRED # The directory where the generated report should be saved.
@@ -176,7 +189,7 @@ jobs:
           #customSettings: '' # Optional custom settings (separated by semicolon). See: https://github.com/danielpalme/ReportGenerator/wiki/Settings.
           toolpath: 'reportgeneratortool' # Default directory for installing the dotnet tool.
 
-      - uses: actions/upload-artifact@v2
+      - uses: actions/upload-artifact@v2.2.3
         if: always()
         with:
           name: Coverage Copertura results for ${{ steps.repo-name.outputs.value }}
