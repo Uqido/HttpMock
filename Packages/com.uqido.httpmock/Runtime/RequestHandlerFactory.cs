@@ -13,6 +13,11 @@ namespace HttpMock
 		public RequestHandler Get(string path) {
 			return CreateHandler(path, "GET");
 		}
+		
+		public RequestHandler Patch(string path)
+		{
+			return CreateHandler(path, "PATCH");
+		}
 
 		public RequestHandler Post(string path) {
 			return CreateHandler(path, "POST");
