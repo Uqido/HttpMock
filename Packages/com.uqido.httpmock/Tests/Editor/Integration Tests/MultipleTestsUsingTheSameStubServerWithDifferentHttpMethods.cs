@@ -29,6 +29,17 @@ namespace HttpMock.Integration.Tests
 		}
 
 		[Test]
+		public void Should_patch()
+		{
+			_httpMockRepository
+				.Stub(x => x.Patch("/endpoint"))
+				.Return("I am a PATCH")
+				.OK();
+			
+			AssertResponse("PATCH", "I am a PATCH");
+		}
+		
+		[Test]
 		public void Should_post()
 		{
 			_httpMockRepository
