@@ -5,8 +5,12 @@ It's particularly useful for Integration and Acceptance testing.
 
 HttpMock returns canned responses at run time.
 
+Supports Unity 2020.3 or later.
 
-## Usage.
+## Credits
+Based on [HttpMock](https://github.com/hibri/HttpMock) by @hibri
+
+## Usage
 
 First, in the application you are testing, change the url of the HTTP service you want to mock, with the url for HttpMock.
 
@@ -37,7 +41,7 @@ There are three essential parts to setting up a stub.
 
 
 
-Eample usage:
+Example usage:
 
 ```csharp
 [Test]
@@ -57,7 +61,3 @@ public void SUT_should_return_stubbed_response()
 	Assert.That(result, Is.EqualTo(expected));
 }
 ```
-
-
-## Reporting Issues.
-When reporting issues, please provide a failing test. 
