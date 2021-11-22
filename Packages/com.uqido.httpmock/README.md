@@ -8,7 +8,7 @@ HttpMock returns canned responses at run time.
 Supports Unity 2020.3 or later.
 
 ## Credits
-Based on [HttpMock](https://github.com/hibri/HttpMock) by @hibri
+Based on [HttpMock](https://github.com/hibri/HttpMock) by [@hibri](https://github.com/hibri)
 
 ## Usage
 
