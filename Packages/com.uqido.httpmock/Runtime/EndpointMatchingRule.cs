@@ -60,7 +60,9 @@ namespace HttpMock
                 pathToMatch = request.Uri.Substring(0, positionOfQueryStart);
             }
 
-            var pathMatch = new Regex(string.Format(@"^{0}\/*$", Regex.Escape(requestHandler.Path)));
+            var regex = requestHandler is RequestHandlerWithParam ? @"^{0}\/.*$" : @"^{0}\/*$";
+
+            var pathMatch = new Regex(string.Format(regex, Regex.Escape(requestHandler.Path)));
             return pathMatch.IsMatch(pathToMatch);
         }
 

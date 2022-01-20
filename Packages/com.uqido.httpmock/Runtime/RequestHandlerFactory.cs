@@ -38,6 +38,35 @@ namespace HttpMock
 		public RequestHandler CustomVerb(string path, string verb) {
 			return CreateHandler(path, verb);
 		}
+		
+		public RequestHandler GetWithParam(string path) {
+			return CreateHandlerWithParam(path, "GET");
+		}
+		
+		public RequestHandler PatchWithParam(string path)
+		{
+			return CreateHandlerWithParam(path, "PATCH");
+		}
+
+		public RequestHandler PostWithParam(string path) {
+			return CreateHandlerWithParam(path, "POST");
+		}
+
+		public RequestHandler PutWithParam(string path) {
+			return CreateHandlerWithParam(path, "PUT");
+		}
+
+		public RequestHandler DeleteWithParam(string path) {
+			return CreateHandlerWithParam(path, "DELETE");
+		}
+
+		public RequestHandler HeadWithParam(string path) {
+			return CreateHandlerWithParam(path, "HEAD");
+		}
+
+		public RequestHandler CustomVerbWithParam(string path, string verb) {
+			return CreateHandlerWithParam(path, verb);
+		}
 
 		public void ClearHandlers() {
 			new List<RequestHandler>();
@@ -48,6 +77,12 @@ namespace HttpMock
 		private RequestHandler CreateHandler(string path, string method) {
 			string cleanedPath = path;
 			var requestHandler = new RequestHandler(cleanedPath, _requestProcessor) {Method = method};
+			return requestHandler;
+		}
+		
+		private RequestHandler CreateHandlerWithParam(string path, string method) {
+			string cleanedPath = path;
+			var requestHandler = new RequestHandlerWithParam(cleanedPath, _requestProcessor) {Method = method};
 			return requestHandler;
 		}
 	}
