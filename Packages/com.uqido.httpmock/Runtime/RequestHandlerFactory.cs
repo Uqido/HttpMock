@@ -2,54 +2,63 @@ using System.Collections.Generic;
 
 namespace HttpMock
 {
-	public class RequestHandlerFactory
-	{
-		private readonly IRequestProcessor _requestProcessor;
+    public class RequestHandlerFactory
+    {
+        private readonly IRequestProcessor _requestProcessor;
 
-		public RequestHandlerFactory(IRequestProcessor requestProcessor) {
-			_requestProcessor = requestProcessor;
-		}
+        public RequestHandlerFactory(IRequestProcessor requestProcessor)
+        {
+            _requestProcessor = requestProcessor;
+        }
 
-		public RequestHandler Get(string path) {
-			return CreateHandler(path, "GET");
-		}
-		
-		public RequestHandler Patch(string path)
-		{
-			return CreateHandler(path, "PATCH");
-		}
+        public RequestHandler Get(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "GET", withParam);
+        }
 
-		public RequestHandler Post(string path) {
-			return CreateHandler(path, "POST");
-		}
+        public RequestHandler Patch(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "PATCH", withParam);
+        }
 
-		public RequestHandler Put(string path) {
-			return CreateHandler(path, "PUT");
-		}
+        public RequestHandler Post(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "POST", withParam);
+        }
 
-		public RequestHandler Delete(string path) {
-			return CreateHandler(path, "DELETE");
-		}
+        public RequestHandler Put(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "PUT", withParam);
+        }
 
-		public RequestHandler Head(string path) {
-			return CreateHandler(path, "HEAD");
-		}
+        public RequestHandler Delete(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "DELETE", withParam);
+        }
 
-		public RequestHandler CustomVerb(string path, string verb) {
-			return CreateHandler(path, verb);
-		}
+        public RequestHandler Head(string path, bool withParam = false)
+        {
+            return CreateHandler(path, "HEAD", withParam);
+        }
 
-		public void ClearHandlers() {
-			new List<RequestHandler>();
-		}
+        public RequestHandler CustomVerb(string path, string verb, bool withParam = false)
+        {
+            return CreateHandler(path, verb, withParam);
+        }
+
+        public void ClearHandlers()
+        {
+            new List<RequestHandler>();
+        }
 
 
-
-		private RequestHandler CreateHandler(string path, string method) {
-			string cleanedPath = path;
-			var requestHandler = new RequestHandler(cleanedPath, _requestProcessor) {Method = method};
-			return requestHandler;
-		}
-	}
-
+        private RequestHandler CreateHandler(string path, string method, bool withParam = false)
+        {
+            string cleanedPath = path;
+            var requestHandler = withParam
+                ? new RequestHandlerWithParam(cleanedPath, _requestProcessor) { Method = method, HasParam = true }
+                : new RequestHandler(cleanedPath, _requestProcessor) { Method = method };
+            return requestHandler;
+        }
+    }
 }
