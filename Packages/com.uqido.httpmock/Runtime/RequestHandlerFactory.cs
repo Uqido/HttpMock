@@ -13,37 +13,37 @@ namespace HttpMock
 
         public RequestHandler Get(string path, bool withParam = false)
         {
-            return CreateHandler(path, "GET");
+            return CreateHandler(path, "GET", withParam);
         }
 
         public RequestHandler Patch(string path, bool withParam = false)
         {
-            return CreateHandler(path, "PATCH");
+            return CreateHandler(path, "PATCH", withParam);
         }
 
         public RequestHandler Post(string path, bool withParam = false)
         {
-            return CreateHandler(path, "POST");
+            return CreateHandler(path, "POST", withParam);
         }
 
         public RequestHandler Put(string path, bool withParam = false)
         {
-            return CreateHandler(path, "PUT");
+            return CreateHandler(path, "PUT", withParam);
         }
 
         public RequestHandler Delete(string path, bool withParam = false)
         {
-            return CreateHandler(path, "DELETE");
+            return CreateHandler(path, "DELETE", withParam);
         }
 
         public RequestHandler Head(string path, bool withParam = false)
         {
-            return CreateHandler(path, "HEAD");
+            return CreateHandler(path, "HEAD", withParam);
         }
 
         public RequestHandler CustomVerb(string path, string verb, bool withParam = false)
         {
-            return CreateHandler(path, verb);
+            return CreateHandler(path, verb, withParam);
         }
 
         public void ClearHandlers()
