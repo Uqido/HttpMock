@@ -54,7 +54,7 @@ namespace HttpMock
 	                {
 	                    handler.RecordRequest(request, bufferedBody);
 	                    _log.DebugFormat("Body: {0}", bufferedBody);
-	                    response.OnResponse(handler.ResponseBuilder.BuildHeaders(), dataProducer);
+	                    response.OnResponse(handler.ResponseBuilder.BuildHeaders(bufferedBody.Length), dataProducer);
 	                },
 	                error =>
 	                {
@@ -65,8 +65,8 @@ namespace HttpMock
 	        }
 	        else
 	        {
+		        handler.RecordRequest(request, null);
 	            response.OnResponse(handler.ResponseBuilder.BuildHeaders(), dataProducer);
-	            handler.RecordRequest(request, null);
 	        }
 	        _log.DebugFormat("End Processing request for : {0}:{1}", request.Method, request.Uri);
 	    }

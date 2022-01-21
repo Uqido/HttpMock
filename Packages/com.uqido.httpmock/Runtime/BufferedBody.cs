@@ -18,12 +18,16 @@ namespace HttpMock
 			this.dataFunc = data;
 		}
 
-		public Func<int> Length => () => dataFunc().Length;
+		private int _length = 0;
+		
+		public Func<int> Length => () => _length;
 
 		public IDisposable Connect(IDataConsumer channel)
 		{
 			// null continuation, consumer must swallow the data immediately.
-			var bytes = new ArraySegment<byte>(dataFunc());
+			var data = dataFunc();
+			_length = data.Length;
+			var bytes = new ArraySegment<byte>(data);
 			channel.OnData(bytes, null);
 			channel.OnEnd();
 			return null;
@@ -35,11 +39,15 @@ namespace HttpMock
 
 	class NoBody : IResponse
 	{
+		
+		
 		public IDisposable Connect(IDataConsumer channel) {
 			return null;
 		}
 
 		public void SetRequestHeaders(IDictionary<string, string> requestHeaders) {
 		}
+
+		public Func<int> Length { get; } = () => 0;
 	}
 }

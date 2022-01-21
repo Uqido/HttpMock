@@ -48,9 +48,15 @@ namespace HttpMock
 		public void SetRequestHeaders(IDictionary<string, string> requestHeaders) {
 			_requestHeaders = requestHeaders;
 		}
+
+		private int _length = 0;
+
+		public Func<int> Length => () => _length;
 	}
 
 	internal interface IResponse : IDataProducer {
 		void SetRequestHeaders(IDictionary<string, string> requestHeaders);
+		
+		public Func<int> Length { get; }
 	}
 }

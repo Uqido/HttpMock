@@ -5,7 +5,7 @@
 		"name": "Uqido",
 		"url": "https://uqido.com"
 	},
-	"version": "1.0.0",
+	"version": "1.1.0",
 	"unity": "2020.3",
 	"description": "HttpMock enables you to mock the behaviour of HTTP services, that your application depends on, during testing",
 	"repository": {

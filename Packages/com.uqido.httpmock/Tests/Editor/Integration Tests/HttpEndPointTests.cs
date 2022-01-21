@@ -11,6 +11,7 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using Cysharp.Threading.Tasks;
 using UnityEngine.TestTools;
+using Debug = UnityEngine.Debug;
 
 namespace HttpMock.Integration.Tests
 {
@@ -90,7 +91,10 @@ namespace HttpMock.Integration.Tests
             var expected = "expectedbody";
             _stubHttp = HttpMockRepository.At(_hostUrl);
             var requestHandler = _stubHttp.Stub(x => x.Post("/endpoint"));
-            requestHandler.Return(expected).OK();
+            requestHandler.Return(() =>
+            {
+                return expected;
+            }).OK();
 
             using (var wc = new WebClient())
             {
@@ -103,6 +107,68 @@ namespace HttpMock.Integration.Tests
 
 
             var requestBody = ((RequestHandler)requestHandler).LastRequest().Body;
+
+            Assert.That(requestBody, Is.EqualTo(expected));
+        }
+        
+        
+        [Test]
+        public void Should()
+        {
+            var expected = "expectedbody";
+            _stubHttp = HttpMockRepository.At(_hostUrl);
+            var productsPost = _stubHttp.Stub(x => x.Post("/api/v1/products"));
+
+            //productsPost.Return(expected).OK();
+            //productsPost.Return(()=>((RequestHandler)productsPost).LastRequest().Body).OK();
+            productsPost.Return(() =>
+            {
+                var requestBody = ((RequestHandler)productsPost).LastRequest().Body;
+                Debug.Log("aaaaaaaaaaaaaaaaa" + requestBody);
+
+                //var input =
+                //    JsonConvert.DeserializeObject<ProductInput>(((RequestHandler)productsPost).LastRequest().Body);
+////
+                //try
+                //{
+                //    var generatedID = randomizer.Next(int.MaxValue);
+                //    while (_mockProducts.Select((p) => p.ID).Contains(generatedID))
+                //    {
+                //        generatedID = randomizer.Next(int.MaxValue);
+                //    }
+////
+                //    var newProduct = new Product()
+                //    {
+                //        ID = generatedID,
+                //        Code = input.Code,
+                //        ProductModelID = input.ProductModelID,
+                //        CreatedAt = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss.FFFFFF"),
+                //        UpdatedAt = DateTime.Now.ToLongDateString()
+                //    };
+////
+////
+                //    _mockProducts.Add(newProduct);
+                //    return JsonConvert.SerializeObject(newProduct);
+                //}
+                //catch (Exception e)
+                //{
+                //    Debug.LogException(e);
+                //    return "";
+                //}
+                return expected;
+            }).OK();
+
+            using (var wc = new WebClient())
+            {
+                wc.Headers[HttpRequestHeader.ContentType] = "application/xml";
+                wc.UploadString(string.Format("{0}/api/v1/products", _hostUrl), "first");
+                wc.UploadString(string.Format("{0}/api/v1/products", _hostUrl), "second");
+
+                wc.UploadString(string.Format("{0}/api/v1/products", _hostUrl), expected);
+            }
+
+
+            var requestBody = ((RequestHandler)productsPost).LastRequest().Body;
 
             Assert.That(requestBody, Is.EqualTo(expected));
         }
